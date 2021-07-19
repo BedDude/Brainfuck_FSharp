@@ -44,8 +44,9 @@ let rec run program =
 
 [<EntryPoint>]
 let main argv =
-    if argv.Length < 1
-    then printf "We need code!"; 0
-    else readFile argv.[0]
-        |> createProgram
-        |> run
+    let code = 
+        if argv.Length = 0 then Console.ReadLine() |> Seq.toArray
+        else readFile argv.[0]
+    
+    createProgram code
+    |> run
