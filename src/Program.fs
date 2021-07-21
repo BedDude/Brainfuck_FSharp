@@ -16,11 +16,8 @@ let readFile path =
 let createProgram code = 
     { Code = code; CodePos = 0; Mem = Array.zeroCreate(30000); MemPos = 0 }
 
-let readValue = 
-    Console.Read()
-
-let printValue value = 
-    Console.Write(char(value))
+let memoryPos currPos shift = 
+    (currPos + shift + 30000) % 30000
 
 let getNextOp program = 
     if program.CodePos < program.Code.Length 
@@ -37,7 +34,7 @@ let rec startLoop program pos level =
 
 let rec endLoop program pos level = 
     match level with
-    | 0 -> pos
+    | 0 -> pos - 1
     | _ -> match program.Code.[pos] with
            | '[' -> endLoop program (pos + 1) (level + 1)
            | ']' -> endLoop program (pos + 1) (level - 1)
@@ -47,10 +44,10 @@ let interpCode prg symb =
     match symb with
     | '+' -> prg.Mem.[prg.MemPos] <- prg.Mem.[prg.MemPos] + 1
     | '-' -> prg.Mem.[prg.MemPos] <- prg.Mem.[prg.MemPos] - 1
-    | '>' -> prg.MemPos <- prg.MemPos + 1
-    | '<' -> prg.MemPos <- prg.MemPos - 1
-    | '.' -> printValue prg.Mem.[prg.MemPos]
-    | ',' -> prg.Mem.[prg.MemPos] <- readValue
+    | '>' -> prg.MemPos <- memoryPos prg.MemPos 1
+    | '<' -> prg.MemPos <- memoryPos prg.MemPos (-1)
+    | '.' -> Console.Write(char(prg.Mem.[prg.MemPos]))
+    | ',' -> prg.Mem.[prg.MemPos] <- Console.Read()
     | '[' -> if prg.Mem.[prg.MemPos] = 0 
              then prg.CodePos <- endLoop prg (prg.CodePos + 1) 1 
     | ']' -> if prg.Mem.[prg.MemPos] <> 0
@@ -66,9 +63,8 @@ let rec run program =
 
 [<EntryPoint>]
 let main argv =
-    let code =
-        if argv.Length = 0 then Console.ReadLine() |> Seq.toArray
-        else readFile argv.[0]
-    
-    createProgram code
-    |> run
+    if argv.Length > 0
+    then readFile argv.[0]
+         |> createProgram
+         |> run
+    else 0
